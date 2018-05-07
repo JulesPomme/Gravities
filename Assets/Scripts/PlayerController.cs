@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,9 +9,6 @@ public class PlayerController : CustomPhysics {
     public float jumpTakeOffSpeed = 7;
 
     private SpriteRenderer spriteRenderer;
-    private float hInput;
-    private bool jumpInputDown;
-    private bool jumpInputUp;
 
     void Awake() {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -19,8 +17,8 @@ public class PlayerController : CustomPhysics {
     protected override void ComputeVelocity() {
 
         //Jump
-        jumpInputDown = Input.GetKeyDown(KeyCode.RightControl);
-        jumpInputUp = Input.GetKeyUp(KeyCode.RightControl);
+        bool jumpInputDown = Input.GetKeyDown(KeyCode.RightControl);
+        bool jumpInputUp = Input.GetKeyUp(KeyCode.RightControl);
         if (jumpInputDown && grounded) {
             velocity.y = jumpTakeOffSpeed;
         } else if (jumpInputUp && velocity.y > 0) {
@@ -28,7 +26,7 @@ public class PlayerController : CustomPhysics {
         }
 
         //Walk
-        hInput = Input.GetAxis("Horizontal");
+        float hInput = Input.GetAxis("Horizontal");
         Vector2 movement = Vector2.zero;
         movement.x = hInput;
 

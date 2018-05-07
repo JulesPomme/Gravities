@@ -14,6 +14,7 @@ public class CustomPhysics : MonoBehaviour {
     protected Vector2 velocity;
     protected ContactFilter2D contactFilter;
     protected RaycastHit2D[] hitBuffer = new RaycastHit2D[16];
+    protected Vector2 gravity;
 
     protected const float minMoveDistance = 0.001f;
     protected const float shellRadius = 0.01f;
@@ -37,9 +38,13 @@ public class CustomPhysics : MonoBehaviour {
     protected virtual void ComputeVelocity() {
     }
 
+    public void SwitchGravity(Vector2 newGravity) {
+        gravity = Physics2D.gravity.magnitude * newGravity;
+    }
+
     void FixedUpdate() {
 
-        velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
+        velocity += gravityModifier * gravity * Time.deltaTime;
         velocity.x = targetVelocity.x;
         Vector2 deltaPosition = velocity * Time.deltaTime;
 
@@ -84,5 +89,8 @@ public class CustomPhysics : MonoBehaviour {
         rb2d.position = rb2d.position + move.normalized * distance;
     }
 
+    public bool IsGrounded() {
+        return grounded;
+    }
 
 }
