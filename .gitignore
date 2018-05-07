@@ -1,0 +1,9 @@
+Library/**
+Temp/**
+*.csproj
+Gravities.sln
+*.userprefs
+UnityPackageManager/manifest.json
+ProjectSettings/ProjectVersion.txt
+.vs/**
+Build/*
