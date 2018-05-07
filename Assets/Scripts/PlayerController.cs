@@ -18,19 +18,19 @@ public class PlayerController : CustomPhysics {
 
     protected override void ComputeVelocity() {
 
-        hInput = Input.GetAxis("Horizontal");
+        //Jump
         jumpInputDown = Input.GetKeyDown(KeyCode.RightControl);
         jumpInputUp = Input.GetKeyUp(KeyCode.RightControl);
-
-        Vector2 movement = Vector2.zero;
-
-        movement.x = hInput;
-
         if (jumpInputDown && grounded) {
             velocity.y = jumpTakeOffSpeed;
         } else if (jumpInputUp && velocity.y > 0) {
             velocity.y = velocity.y * 0.5f;
         }
+
+        //Walk
+        hInput = Input.GetAxis("Horizontal");
+        Vector2 movement = Vector2.zero;
+        movement.x = hInput;
 
         bool flipSprite = (spriteRenderer.flipX ? (movement.x > 0.01f) : (movement.x < 0.01f));
         if (flipSprite) {
