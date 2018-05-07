@@ -574,7 +574,7 @@ MonoBehaviour:
   minGroundNormalY: 0.65
   gravityModifier: 1
   maxSpeed: 5
-  jumpTakeOffSpeed: 5
+  jumpTakeOffSpeed: 5.5
 --- !u!1 &1017577543
 GameObject:
   m_ObjectHideFlags: 0

@@ -28,14 +28,19 @@ public class CustomPhysics : MonoBehaviour {
         contactFilter.useLayerMask = true;
     }
 
-    protected virtual float ComputeVelocity() {
-        return 0f;
+    private void Update() {
+
+        targetVelocity = Vector2.zero;
+        ComputeVelocity();
+    }
+
+    protected virtual void ComputeVelocity() {
     }
 
     void FixedUpdate() {
 
         velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
-        velocity.x = ComputeVelocity();
+        velocity.x = targetVelocity.x;
         Vector2 deltaPosition = velocity * Time.deltaTime;
 
         grounded = false;

@@ -16,14 +16,12 @@ public class PlayerController : CustomPhysics {
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    private void Update() {
+    protected override void ComputeVelocity() {
 
         hInput = Input.GetAxis("Horizontal");
         jumpInputDown = Input.GetKeyDown(KeyCode.RightControl);
         jumpInputUp = Input.GetKeyUp(KeyCode.RightControl);
-    }
 
-    protected override float ComputeVelocity() {
         Vector2 movement = Vector2.zero;
 
         movement.x = hInput;
@@ -39,6 +37,6 @@ public class PlayerController : CustomPhysics {
             spriteRenderer.flipX = !spriteRenderer.flipX;
         }
 
-        return (movement * maxSpeed).x;
+        targetVelocity = movement * maxSpeed;
     }
 }
