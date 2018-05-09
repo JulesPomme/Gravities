@@ -4,23 +4,31 @@ using UnityEngine;
 
 public class CustomPhysics : MonoBehaviour {
 
-    public float minGroundNormalY = .65f;
+    public float maxGroundSlopeAngle = 45f;
     public float gravityModifier = 1f;
+    public Vector2 defaultGravity = new Vector2(0, -1);
 
     protected bool grounded;
-    protected Vector2 targetVelocity;
-    protected Vector2 groundNormal;
     protected Rigidbody2D rb2d;
+    /// <summary>
+    /// The current velocity of this object. Express it as if gravity and jump were always along y axis and along ground movement along x axis.
+    /// </summary>
     protected Vector2 velocity;
+    /// <summary>
+    /// The target velocity of this object (on next FixedUpdate). Express it as if gravity and jump were always along y axis and along ground movement along x axis.
+    /// </summary>
+    protected Vector2 targetVelocity;
+    protected Vector2 gravity;
+    protected Vector2 groundNormal;
     protected ContactFilter2D contactFilter;
     protected RaycastHit2D[] hitBuffer = new RaycastHit2D[16];
-    protected Vector2 gravity;
 
     protected const float minMoveDistance = 0.001f;
     protected const float shellRadius = 0.01f;
 
     void OnEnable() {
         rb2d = GetComponent<Rigidbody2D>();
+        gravity = defaultGravity;
     }
 
     void Start() {
@@ -39,42 +47,53 @@ public class CustomPhysics : MonoBehaviour {
     }
 
     public void SwitchGravity(Vector2 newGravity) {
-        gravity = Physics2D.gravity.magnitude * newGravity;
+        gravity = newGravity;
     }
 
     void FixedUpdate() {
 
-        velocity += gravityModifier * gravity * Time.deltaTime;
-        velocity.x = targetVelocity.x;
+        //Apply standard gravity to velocity
+        velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
+
+        ////Apply target velocity
+        //velocity.x = targetVelocity.x;
+
+        //Convert velocity to a position shift
         Vector2 deltaPosition = velocity * Time.deltaTime;
 
         grounded = false;
 
-        Vector2 movementAlongGround = new Vector2(groundNormal.y, -groundNormal.x);
-        Vector2 movement = movementAlongGround * deltaPosition.x;
-        Move(movement, false);
+        ////Movement along ground
 
-        movement = Vector2.up * deltaPosition.y;
-        Move(movement, true);
+        //Vector2 directionAlongGround = new Vector2(groundNormal.y, -groundNormal.x);
+        //Vector2 movementAlongGround = directionAlongGround * deltaPosition.x;
+        //Move(movementAlongGround, false);
+
+        //Movement along gravity
+        Vector2 directionAlongGravity = -gravity;
+        Vector2 movementAlongGravity = directionAlongGravity * deltaPosition.y;
+        Move(movementAlongGravity, true);
     }
 
-    void Move(Vector2 move, bool yMovement) {
-        float distance = move.magnitude;
+    void Move(Vector2 movement, bool alongGravityMovement) {
+        float distance = movement.magnitude;
 
         if (distance > minMoveDistance) {
-            int count = rb2d.Cast(move, contactFilter, hitBuffer, distance + shellRadius);
+            int count = rb2d.Cast(movement, contactFilter, hitBuffer, distance + shellRadius);
 
             for (int i = 0; i < count; i++) {
                 Vector2 currentNormal = hitBuffer[i].normal;
-                if (currentNormal.y > minGroundNormalY) {
+                float slopeAngle = Vector2.Angle(currentNormal, -gravity);
+                if (slopeAngle < maxGroundSlopeAngle) {
                     grounded = true;
-                    if (yMovement) {
+                    if (alongGravityMovement) {
                         groundNormal = currentNormal;
                         currentNormal.x = 0;
                     }
                 }
 
                 float projection = Vector2.Dot(velocity, currentNormal);
+                Debug.Log("currentNormal = " + currentNormal + ", velocity = " + velocity + ", projection = " + projection);
                 if (projection < 0) {
                     velocity = velocity - projection * currentNormal;
                 }
@@ -82,15 +101,12 @@ public class CustomPhysics : MonoBehaviour {
                 float modifiedDistance = hitBuffer[i].distance - shellRadius;
                 distance = modifiedDistance < distance ? modifiedDistance : distance;
             }
-
-
         }
 
-        rb2d.position = rb2d.position + move.normalized * distance;
+        rb2d.position = rb2d.position + movement.normalized * distance;
     }
 
     public bool IsGrounded() {
         return grounded;
     }
-
 }
