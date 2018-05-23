@@ -11,11 +11,11 @@ public class CustomPhysics : MonoBehaviour {
     protected bool grounded;
     protected Rigidbody2D rb2d;
     /// <summary>
-    /// The current velocity of this object. Express it as if gravity and jump were always along y axis and along ground movement along x axis.
+    /// The current velocity of this object. The x value is the velocity along ground, the y value is the velocity along gravity vector.
     /// </summary>
     protected Vector2 velocity;
     /// <summary>
-    /// The target velocity of this object (on next FixedUpdate). Express it as if gravity and jump were always along y axis and along ground movement along x axis.
+    /// The target velocity of this object (on next FixedUpdate). The x value is the velocity along ground, the y value is the velocity along gravity vector.
     /// </summary>
     protected Vector2 targetVelocity;
     protected Vector2 gravity;
@@ -46,7 +46,7 @@ public class CustomPhysics : MonoBehaviour {
     protected virtual void ComputeVelocity() {
     }
 
-    public void SwitchGravity(Vector2 newGravity) {
+    public void SetGravity(Vector2 newGravity) {
         gravity = newGravity;
     }
 
@@ -56,7 +56,7 @@ public class CustomPhysics : MonoBehaviour {
         velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
 
         ////Apply target velocity
-        //velocity.x = targetVelocity.x;
+        velocity.x = targetVelocity.x;
 
         //Convert velocity to a position shift
         Vector2 deltaPosition = velocity * Time.deltaTime;
@@ -65,13 +65,13 @@ public class CustomPhysics : MonoBehaviour {
 
         ////Movement along ground
 
-        //Vector2 directionAlongGround = new Vector2(groundNormal.y, -groundNormal.x);
-        //Vector2 movementAlongGround = directionAlongGround * deltaPosition.x;
-        //Move(movementAlongGround, false);
+        Vector2 directionAlongGround = new Vector2(groundNormal.y, -groundNormal.x);
+        Vector2 movementAlongGround = directionAlongGround * deltaPosition.x;
+        Move(movementAlongGround, false);
 
         //Movement along gravity
-        Vector2 directionAlongGravity = -gravity;
-        Vector2 movementAlongGravity = directionAlongGravity * deltaPosition.y;
+        Vector2 antiGravity = -gravity;
+        Vector2 movementAlongGravity = antiGravity * deltaPosition.y;
         Move(movementAlongGravity, true);
     }
 
@@ -80,22 +80,24 @@ public class CustomPhysics : MonoBehaviour {
 
         if (distance > minMoveDistance) {
             int count = rb2d.Cast(movement, contactFilter, hitBuffer, distance + shellRadius);
-
+            float gravityAngle = Vector2.SignedAngle(gravity, Physics2D.gravity);
             for (int i = 0; i < count; i++) {
                 Vector2 currentNormal = hitBuffer[i].normal;
+                Vector2 rotatedNormal = Quaternion.Euler(0f, 0f, gravityAngle) * currentNormal;
                 float slopeAngle = Vector2.Angle(currentNormal, -gravity);
+
                 if (slopeAngle < maxGroundSlopeAngle) {
                     grounded = true;
                     if (alongGravityMovement) {
                         groundNormal = currentNormal;
-                        currentNormal.x = 0;
+                        rotatedNormal.x = 0;
                     }
                 }
 
-                float projection = Vector2.Dot(velocity, currentNormal);
-                Debug.Log("currentNormal = " + currentNormal + ", velocity = " + velocity + ", projection = " + projection);
+                float projection = Vector2.Dot(velocity, rotatedNormal);
+                Debug.Log("currentNormal = " + currentNormal + ", rotatedNormal = " + rotatedNormal + ", velocity = " + velocity + ", projection = " + projection);
                 if (projection < 0) {
-                    velocity = velocity - projection * currentNormal;
+                    velocity = velocity - projection * rotatedNormal;
                 }
 
                 float modifiedDistance = hitBuffer[i].distance - shellRadius;

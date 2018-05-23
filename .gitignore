@@ -7,3 +7,4 @@ UnityPackageManager/manifest.json
 ProjectSettings/ProjectVersion.txt
 .vs/**
 Build/*
+Packages/manifest.json

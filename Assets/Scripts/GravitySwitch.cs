@@ -9,7 +9,7 @@ public class GravitySwitch : MonoBehaviour {
         if (collision.gameObject.tag == "Player") {
             PlayerController playerController = collision.gameObject.GetComponent<PlayerController>();
             if (!playerController.IsGrounded())
-                playerController.SwitchGravity(-transform.up);
+                playerController.SetGravity(-transform.up);
         }
     }
 }
