@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class CustomPhysics : MonoBehaviour {
 
+    //TODO 
+    // - changement de gravité pendant un saut => adapter le sens de la vélocité
+    // - en arrière après un saut (à la Mario) ?
+    // - adapter les contrôle au changement de gravité
+
     public float maxGroundSlopeAngle = 45f;
     public float gravityModifier = 1f;
     public Vector2 defaultGravity = new Vector2(0, -1);
@@ -11,13 +16,9 @@ public class CustomPhysics : MonoBehaviour {
     protected bool grounded;
     protected Rigidbody2D rb2d;
     /// <summary>
-    /// The current velocity of this object. The x value is the velocity along ground, the y value is the velocity along gravity vector.
+    /// The current velocity of this object. The x value is the velocity along ground, the y value is the velocity along gravity.
     /// </summary>
     protected Vector2 velocity;
-    /// <summary>
-    /// The target velocity of this object (on next FixedUpdate). The x value is the velocity along ground, the y value is the velocity along gravity vector.
-    /// </summary>
-    protected Vector2 targetVelocity;
     protected Vector2 gravity;
     protected Vector2 groundNormal;
     protected ContactFilter2D contactFilter;
@@ -37,34 +38,31 @@ public class CustomPhysics : MonoBehaviour {
         contactFilter.useLayerMask = true;
     }
 
-    private void Update() {
+    protected virtual Vector2 ComputeVelocity() {
 
-        targetVelocity = Vector2.zero;
-        ComputeVelocity();
+        return Vector2.zero;
     }
 
-    protected virtual void ComputeVelocity() {
-    }
-
-    public void SetGravity(Vector2 newGravity) {
+    public virtual void SetGravity(Vector2 newGravity) {
         gravity = newGravity;
     }
 
     void FixedUpdate() {
 
-        //Apply standard gravity to velocity
-        velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
+        //get computed velocity only for inherited classes
+        if (GetType() != typeof(CustomPhysics)) {
+            velocity = ComputeVelocity();
+        }
 
-        ////Apply target velocity
-        velocity.x = targetVelocity.x;
+        //Apply gravity to velocity
+        velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
 
         //Convert velocity to a position shift
         Vector2 deltaPosition = velocity * Time.deltaTime;
 
         grounded = false;
 
-        ////Movement along ground
-
+        //Movement along ground
         Vector2 directionAlongGround = new Vector2(groundNormal.y, -groundNormal.x);
         Vector2 movementAlongGround = directionAlongGround * deltaPosition.x;
         Move(movementAlongGround, false);
@@ -73,6 +71,9 @@ public class CustomPhysics : MonoBehaviour {
         Vector2 antiGravity = -gravity;
         Vector2 movementAlongGravity = antiGravity * deltaPosition.y;
         Move(movementAlongGravity, true);
+
+        //Apply friction if grounded
+        ApplyGroundFriction();
     }
 
     void Move(Vector2 movement, bool alongGravityMovement) {
@@ -95,8 +96,8 @@ public class CustomPhysics : MonoBehaviour {
                 }
 
                 float projection = Vector2.Dot(velocity, rotatedNormal);
-                Debug.Log("currentNormal = " + currentNormal + ", rotatedNormal = " + rotatedNormal + ", velocity = " + velocity + ", projection = " + projection);
                 if (projection < 0) {
+                    //If object hits a wall or a ceil, remove velocity in its direction.
                     velocity = velocity - projection * rotatedNormal;
                 }
 
@@ -106,6 +107,17 @@ public class CustomPhysics : MonoBehaviour {
         }
 
         rb2d.position = rb2d.position + movement.normalized * distance;
+    }
+
+    private void ApplyGroundFriction() {
+
+        if (grounded) {
+            if (velocity.x > 0.01f) {
+                velocity.x *= 0.9f;
+            } else {
+                velocity.x = 0f;
+            }
+        }
     }
 
     public bool IsGrounded() {

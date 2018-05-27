@@ -4,12 +4,30 @@ using UnityEngine;
 
 public class GravitySwitch : MonoBehaviour {
 
+    private Dictionary<GameObject, bool> registeredEntries;
+
+    private void Start() {
+        registeredEntries = new Dictionary<GameObject, bool>();
+    }
+
     private void OnTriggerStay2D(Collider2D collision) {
 
-        if (collision.gameObject.tag == "Player") {
-            PlayerController playerController = collision.gameObject.GetComponent<PlayerController>();
-            if (!playerController.IsGrounded())
-                playerController.SetGravity(-transform.up);
+        CustomPhysics customPhysics = collision.gameObject.GetComponent<CustomPhysics>();
+        if (customPhysics != null) {
+            if (!registeredEntries.ContainsKey(customPhysics.gameObject))
+                registeredEntries[customPhysics.gameObject] = false;
+            if (!customPhysics.IsGrounded() && !registeredEntries[customPhysics.gameObject]) {
+                customPhysics.SetGravity(-transform.up);
+                registeredEntries[customPhysics.gameObject] = true;
+            }
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision) {
+
+        CustomPhysics customPhysics = collision.gameObject.GetComponent<CustomPhysics>();
+        if (customPhysics != null && registeredEntries[customPhysics.gameObject]) {
+            registeredEntries[customPhysics.gameObject] = false;
         }
     }
 }
