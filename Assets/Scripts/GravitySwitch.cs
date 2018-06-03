@@ -26,6 +26,8 @@ public class GravitySwitch : MonoBehaviour {
     private void OnTriggerExit2D(Collider2D collision) {
 
         CustomPhysics customPhysics = collision.gameObject.GetComponent<CustomPhysics>();
+        if (!registeredEntries.ContainsKey(customPhysics.gameObject))
+            return;
         if (customPhysics != null && registeredEntries[customPhysics.gameObject]) {
             registeredEntries[customPhysics.gameObject] = false;
         }

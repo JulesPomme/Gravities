@@ -7,7 +7,7 @@ public class CustomPhysics : MonoBehaviour {
     //TODO 
     // - changement de gravité pendant un saut => adapter le sens de la vélocité
     // - en arrière après un saut (à la Mario) ?
-    // - adapter les contrôle au changement de gravité
+    // - Bug : Pourquoi ne glisse-t-on plus sur les plateformes très inclinées ? (impossible de sauter également)
 
     public float maxGroundSlopeAngle = 45f;
     public float gravityModifier = 1f;
