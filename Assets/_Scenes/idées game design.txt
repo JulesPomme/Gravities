@@ -1,5 +1,3 @@
 - plateformes qui changent la gravité
-- bonus à collecter
-- changer soi-même la gravité
-- ennemis ?
-- plateformes ressort ?
+- bonus uniques à collecter (beateau, mais pour favoriser l'exploration)
+- changer soi-même la gravité (nombre illimté de fois ? Il faut verouiller le level design !)
