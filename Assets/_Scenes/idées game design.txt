@@ -1,0 +1,5 @@
+- plateformes qui changent la gravité
+- bonus à collecter
+- changer soi-même la gravité
+- ennemis ?
+- plateformes ressort ?

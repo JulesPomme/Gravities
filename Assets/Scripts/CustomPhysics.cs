@@ -4,11 +4,6 @@ using UnityEngine;
 
 public class CustomPhysics : MonoBehaviour {
 
-    //TODO 
-    // - changement de gravité pendant un saut => adapter le sens de la vélocité
-    // - en arrière après un saut (à la Mario) ?
-    // - Bug : Pourquoi ne glisse-t-on plus sur les plateformes très inclinées ? (impossible de sauter également)
-
     public float maxGroundSlopeAngle = 45f;
     public float gravityModifier = 1f;
     public Vector2 defaultGravity = new Vector2(0, -1);
@@ -21,6 +16,7 @@ public class CustomPhysics : MonoBehaviour {
     protected Vector2 velocity;
     protected Vector2 gravity;
     protected Vector2 groundNormal;
+    protected Vector2 wallReaction;
     protected ContactFilter2D contactFilter;
     protected RaycastHit2D[] hitBuffer = new RaycastHit2D[16];
 
@@ -30,6 +26,8 @@ public class CustomPhysics : MonoBehaviour {
     void OnEnable() {
         rb2d = GetComponent<Rigidbody2D>();
         gravity = defaultGravity;
+        groundNormal = -gravity;
+        wallReaction = Vector2.zero;
     }
 
     void Start() {
@@ -53,9 +51,17 @@ public class CustomPhysics : MonoBehaviour {
         if (GetType() != typeof(CustomPhysics)) {
             velocity = ComputeVelocity();
         }
+        //Debug.Log("A velocity = " + velocity);
 
         //Apply gravity to velocity
         velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
+
+        //Debug.Log("B velocity = " + velocity + " (gravity = " + gravity + ")");
+
+        //Apply wall reaction to velocity
+        velocity += wallReaction;
+
+        //Debug.Log("C velocity = " + velocity + " (wallReaction = " + wallReaction + ")");
 
         //Convert velocity to a position shift
         Vector2 deltaPosition = velocity * Time.deltaTime;
@@ -80,6 +86,7 @@ public class CustomPhysics : MonoBehaviour {
         float distance = movement.magnitude;
 
         if (distance > minMoveDistance) {
+            wallReaction = Vector2.zero;
             int count = rb2d.Cast(movement, contactFilter, hitBuffer, distance + shellRadius);
             float gravityAngle = Vector2.SignedAngle(gravity, Physics2D.gravity);
             for (int i = 0; i < count; i++) {
@@ -98,7 +105,8 @@ public class CustomPhysics : MonoBehaviour {
                 float projection = Vector2.Dot(velocity, rotatedNormal);
                 if (projection < 0) {
                     //If object hits a wall or a ceil, remove velocity in its direction.
-                    velocity = velocity - projection * rotatedNormal;
+                    //velocity = velocity - projection * rotatedNormal;
+                    wallReaction -= projection * rotatedNormal;
                 }
 
                 float modifiedDistance = hitBuffer[i].distance - shellRadius;

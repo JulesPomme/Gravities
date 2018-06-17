@@ -16,16 +16,20 @@ public class PlayerController : CustomPhysics {
     private bool jump;
     private bool slowJump;
     private float walkInput;
-    private Vector2 previousGravity;
+    //The registered gravity the last time the player was grounded.
+    private Vector2 previousGravityAtGrounded;
     private Direction gravityDirection;
+    private bool updateJumpVelocity;
+    private float gravityDiff;
 
     void Awake() {
         spriteRenderer = GetComponent<SpriteRenderer>();
         jump = false;
         slowJump = false;
         walkInput = 0f;
-        previousGravity = gravity;
+        previousGravityAtGrounded = gravity;
         gravityDirection = Direction.mY;
+        updateJumpVelocity = true;
     }
 
     private void Update() {
@@ -40,11 +44,12 @@ public class PlayerController : CustomPhysics {
         //Register a jump release (slow down jump)
         slowJump = jumpInputUp && velocity.y > 0;
 
-        //Update gravity main direction only when gravity is changing AND player is grounded (in order to let CustomPhysics update its current normal).
-        if (previousGravity != gravity && grounded) {
+        //Update gravity main direction. Do it only at gravity changing AND if player is grounded (to let CustomPhysics update currentNormal).
+        if (previousGravityAtGrounded != gravity && grounded) {
             gravityDirection = GetGravityMainDirection();
-            previousGravity = gravity;
+            previousGravityAtGrounded = gravity;
         }
+
         //Register a walk entry. Input depends on the gravity direction.
         float hInput = Input.GetAxis("Horizontal");
         float vInput = Input.GetAxis("Vertical");
@@ -52,6 +57,7 @@ public class PlayerController : CustomPhysics {
         bool chooseMinusHInput = gravityDirection == Direction.Y || gravityDirection == Direction.XY && Mathf.Abs(hInput) >= Math.Abs(vInput) || gravityDirection == Direction.mXY && Mathf.Abs(hInput) >= Math.Abs(vInput);
         bool chooseVInput = gravityDirection == Direction.X || gravityDirection == Direction.XY && Mathf.Abs(vInput) > Math.Abs(hInput) || gravityDirection == Direction.XmY && Mathf.Abs(vInput) > Math.Abs(hInput);
         bool chooseMinusVInput = gravityDirection == Direction.mX || gravityDirection == Direction.mXY && Mathf.Abs(vInput) > Math.Abs(hInput) || gravityDirection == Direction.mXmY && Mathf.Abs(vInput) > Math.Abs(hInput);
+        walkInput = 0;
         if (chooseHInput) {
             walkInput = hInput;
         } else if (chooseMinusHInput) {
@@ -94,19 +100,28 @@ public class PlayerController : CustomPhysics {
 
         Vector2 targetVelocity = Vector2.zero;
 
-        //Jump
-        if (jump) {
-            targetVelocity.y = jumpTakeOffSpeed;
-            jump = false;
-        } else if (slowJump) {
-            targetVelocity.y = velocity.y * 0.5f;
+        if (updateJumpVelocity) {
+            //Jump continuity after gravity changing
+            targetVelocity.y = (Quaternion.Euler(0f, 0f, gravityDiff) * velocity).y;
+            updateJumpVelocity = false;
         } else {
-            targetVelocity.y = velocity.y;
+            //Jump
+            if (jump) {
+                targetVelocity.y = jumpTakeOffSpeed;
+                jump = false;
+            } else if (slowJump) {
+                targetVelocity.y = velocity.y * 0.5f;
+            } else {
+                targetVelocity.y = velocity.y;
+            }
         }
 
         //Walk
-        targetVelocity.x = walkInput * maxSpeed;
-
+        if (walkInput != 0) {
+            targetVelocity.x = walkInput * maxSpeed;
+        } else {
+            targetVelocity.x = velocity.x;
+        }
         bool flipSprite = (spriteRenderer.flipX ? (walkInput > 0.01f) : (walkInput < 0.01f));
         if (flipSprite) {
             spriteRenderer.flipX = !spriteRenderer.flipX;
@@ -118,6 +133,8 @@ public class PlayerController : CustomPhysics {
 
     public override void SetGravity(Vector2 newGravity) {
 
+        gravityDiff = Vector2.SignedAngle(newGravity, gravity);
         base.SetGravity(newGravity);
+        updateJumpVelocity = true;
     }
 }
