@@ -3,9 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : CustomPhysics {
+public class PlayerController : CustomPhysics
+{
+    //TODO jump bug (quand on saute immédiatement après avoir atterit, on a parfois un double saut qui s'enclenche)
 
-    public enum Direction {
+    public enum Direction
+    {
         X, mX, Y, mY, XY, mXY, XmY, mXmY
     }
 
@@ -22,7 +25,8 @@ public class PlayerController : CustomPhysics {
     private bool updateJumpVelocity;
     private float gravityDiff;
 
-    void Awake() {
+    void Awake()
+    {
         spriteRenderer = GetComponent<SpriteRenderer>();
         jump = false;
         slowJump = false;
@@ -32,20 +36,23 @@ public class PlayerController : CustomPhysics {
         updateJumpVelocity = true;
     }
 
-    private void Update() {
+    private void Update()
+    {
 
         bool jumpInputDown = Input.GetKeyDown(KeyCode.LeftControl);
         bool jumpInputUp = Input.GetKeyUp(KeyCode.LeftControl);
 
         //Register a jump entry 
-        if (jumpInputDown && grounded && !jump) {
+        if (jumpInputDown && grounded && !jump)
+        {
             jump = true;
         }
         //Register a jump release (slow down jump)
         slowJump = jumpInputUp && velocity.y > 0;
 
         //Update gravity main direction. Do it only at gravity changing AND if player is grounded (to let CustomPhysics update currentNormal).
-        if (previousGravityAtGrounded != gravity && grounded) {
+        if (previousGravityAtGrounded != gravity && grounded)
+        {
             gravityDirection = GetGravityMainDirection();
             previousGravityAtGrounded = gravity;
         }
@@ -58,37 +65,59 @@ public class PlayerController : CustomPhysics {
         bool chooseVInput = gravityDirection == Direction.X || gravityDirection == Direction.XY && Mathf.Abs(vInput) > Math.Abs(hInput) || gravityDirection == Direction.XmY && Mathf.Abs(vInput) > Math.Abs(hInput);
         bool chooseMinusVInput = gravityDirection == Direction.mX || gravityDirection == Direction.mXY && Mathf.Abs(vInput) > Math.Abs(hInput) || gravityDirection == Direction.mXmY && Mathf.Abs(vInput) > Math.Abs(hInput);
         walkInput = 0;
-        if (chooseHInput) {
+        if (chooseHInput)
+        {
             walkInput = hInput;
-        } else if (chooseMinusHInput) {
+        }
+        else if (chooseMinusHInput)
+        {
             walkInput = -hInput;
-        } else if (chooseVInput) {
+        }
+        else if (chooseVInput)
+        {
             walkInput = vInput;
-        } else if (chooseMinusVInput) {
+        }
+        else if (chooseMinusVInput)
+        {
             walkInput = -vInput;
         }
     }
 
-    private Direction GetGravityMainDirection() {
+    private Direction GetGravityMainDirection()
+    {
 
         Direction dir = Direction.mY;
         float gravityY = Mathf.Round(gravity.y * 100f) / 100f;
         float gravityX = Mathf.Round(gravity.x * 100f) / 100f;
-        if (Mathf.Abs(gravityY) > Mathf.Abs(gravityX)) {
+        if (Mathf.Abs(gravityY) > Mathf.Abs(gravityX))
+        {
             dir = gravityY < 0 ? Direction.mY : Direction.Y;
-        } else if (Mathf.Abs(gravityX) > Mathf.Abs(gravityY)) {
+        }
+        else if (Mathf.Abs(gravityX) > Mathf.Abs(gravityY))
+        {
             dir = gravityX < 0 ? Direction.mX : Direction.X;
-        } else {//Mathf.Abs(gravityY) == Mathf.Abs(gravityX)
-            if (gravityY > 0) {
-                if (gravityX > 0) {
+        }
+        else
+        {//Mathf.Abs(gravityY) == Mathf.Abs(gravityX)
+            if (gravityY > 0)
+            {
+                if (gravityX > 0)
+                {
                     dir = Direction.XY;
-                } else {
+                }
+                else
+                {
                     dir = Direction.mXY;
                 }
-            } else {
-                if (gravityX > 0) {
+            }
+            else
+            {
+                if (gravityX > 0)
+                {
                     dir = Direction.XmY;
-                } else {
+                }
+                else
+                {
                     dir = Direction.mXmY;
                 }
             }
@@ -96,34 +125,47 @@ public class PlayerController : CustomPhysics {
         return dir;
     }
 
-    protected override Vector2 ComputeVelocity() {
+    protected override Vector2 ComputeVelocity()
+    {
 
         Vector2 targetVelocity = Vector2.zero;
 
-        if (updateJumpVelocity) {
+        if (updateJumpVelocity)
+        {
             //Jump continuity after gravity changing
             targetVelocity.y = (Quaternion.Euler(0f, 0f, gravityDiff) * velocity).y;
             updateJumpVelocity = false;
-        } else {
+        }
+        else
+        {
             //Jump
-            if (jump) {
+            if (jump)
+            {
                 targetVelocity.y = jumpTakeOffSpeed;
                 jump = false;
-            } else if (slowJump) {
+            }
+            else if (slowJump)
+            {
                 targetVelocity.y = velocity.y * 0.5f;
-            } else {
+            }
+            else
+            {
                 targetVelocity.y = velocity.y;
             }
         }
 
         //Walk
-        if (walkInput != 0) {
+        if (walkInput != 0)
+        {
             targetVelocity.x = walkInput * maxSpeed;
-        } else {
+        }
+        else
+        {
             targetVelocity.x = velocity.x;
         }
         bool flipSprite = (spriteRenderer.flipX ? (walkInput > 0.01f) : (walkInput < 0.01f));
-        if (flipSprite) {
+        if (flipSprite)
+        {
             spriteRenderer.flipX = !spriteRenderer.flipX;
         }
 
@@ -131,7 +173,8 @@ public class PlayerController : CustomPhysics {
 
     }
 
-    public override void SetGravity(Vector2 newGravity) {
+    public override void SetGravity(Vector2 newGravity)
+    {
 
         gravityDiff = Vector2.SignedAngle(newGravity, gravity);
         base.SetGravity(newGravity);
