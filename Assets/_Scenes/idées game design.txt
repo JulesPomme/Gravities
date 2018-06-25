@@ -4,3 +4,4 @@
 - échelles
 - plateformes mouvantes, tournantes, etc.
 - level design : avant d'introduire la gravité changeante, faire que le décor s'inverse progressivement, pour donner petit à petit la sensation qu'on est à l'envers.
+- air control : des passages avec deux gravités opposées, ce qui fait que le joueur passe de l'une à l'autre sans jamais atteindre le sol.
