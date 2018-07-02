@@ -2224,7 +2224,7 @@ Tilemap:
   m_TileColorArray:
   - m_RefCount: 214
     m_Data: {r: 1, g: 1, b: 1, a: 1}
-  m_AnimationFrameRate: 1
+  m_AnimationFrameRate: 10
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Origin: {x: -16, y: -7, z: 0}
   m_Size: {x: 37, y: 13, z: 1}
