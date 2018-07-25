@@ -15,6 +15,8 @@ public class PlayerController : CustomPhysics
     public float maxSpeed = 7;
     public float jumpTakeOffSpeed = 7;
 
+	private Animator animator;
+
     private SpriteRenderer spriteRenderer;
     private bool jump;
     private bool slowJump;
@@ -34,6 +36,8 @@ public class PlayerController : CustomPhysics
         previousGravityAtGrounded = gravity;
         gravityDirection = Direction.mY;
         updateJumpVelocity = true;
+		
+		animator = gameObject.GetComponent<Animator>();
     }
 
     private void Update()
@@ -158,10 +162,12 @@ public class PlayerController : CustomPhysics
         if (walkInput != 0)
         {
             targetVelocity.x = walkInput * maxSpeed;
+			animator.SetBool("IsWalking", true);
         }
         else
         {
             targetVelocity.x = velocity.x;
+			animator.SetBool("IsWalking", false);
         }
         bool flipSprite = (spriteRenderer.flipX ? (walkInput > 0.01f) : (walkInput < 0.01f));
         if (flipSprite)
